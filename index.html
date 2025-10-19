@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>優良表現抽獎機</title>
+  <!-- 引入外部資源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FF6B6B',
+            secondary: '#4ECDC4',
+            accent: '#FFD166',
+            dark: '#292F36',
+            light: '#F7FFF7'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定義樣式 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .lottery-ball {
+        @apply w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg transition-all duration-300 transform hover:scale-110;
+      }
+      .btn-primary {
+        @apply bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary/50;
+      }
+      .btn-secondary {
+        @apply bg-secondary hover:bg-secondary/90 text-white font-bold py-3 px-6 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-secondary/50;
+      }
+      .card {
+        @apply bg-white rounded-2xl shadow-xl p-6 transition-all duration-300 hover:shadow-2xl;
+      }
+      .animate-spin-slow {
+        animation: spin 8s linear infinite;
+      }
+      .animate-bounce-slow {
+        animation: bounce 2s infinite;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-light to-gray-100 min-h-screen font-sans text-dark">
+  <!-- 導航列 -->
+  <nav class="bg-white/80 backdrop-blur-md shadow-md fixed w-full z-50 transition-all duration-300">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-trophy text-primary text-2xl"></i>
+        <h1 class="text-xl md:text-2xl font-bold text-dark">優良表現抽獎機</h1>
+      </div>
+      <div class="hidden md:flex space-x-6">
+        <a href="#lottery" class="font-medium hover:text-primary transition-colors">抽獎區</a>
+        <a href="#settings" class="font-medium hover:text-primary transition-colors">設定</a>
+        <a href="#history" class="font-medium hover:text-primary transition-colors">記錄</a>
+        <a href="#instructions" class="font-medium hover:text-primary transition-colors">使用說明</a>
+      </div>
+      <button class="md:hidden text-dark text-xl" id="mobile-menu-btn">
+        <i class="fa fa-bars"></i>
+      </button>
+    </div>
+    <!-- 手機選單 -->
+    <div id="mobile-menu" class="md:hidden hidden bg-white border-t">
+      <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
+        <a href="#lottery" class="py-2 font-medium hover:text-primary transition-colors">抽獎區</a>
+        <a href="#settings" class="py-2 font-medium hover:text-primary transition-colors">設定</a>
+        <a href="#history" class="py-2 font-medium hover:text-primary transition-colors">記錄</a>
+        <a href="#instructions" class="py-2 font-medium hover:text-primary transition-colors">使用說明</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 主內容區 -->
+  <main class="container mx-auto px-4 pt-24 pb-16">
+    <!-- 標題區 -->
+    <section class="text-center mb-16">
+      <h2 class="text-[clamp(2rem,5vw,3.5rem)] font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+        點燃學習與生活熱情的神奇工具！
+      </h2>
+      <p class="text-gray-600 text-lg max-w-3xl mx-auto mb-8">
+        將每一次的努力都變成值得期待的幸運，讓獎勵成為充滿驚喜的體驗
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <button class="btn-primary" id="main-draw-btn">
+          <i class="fa fa-play-circle mr-2"></i>開始抽獎
+        </button>
+        <button class="btn-secondary">
+          <i class="fa fa-cog mr-2"></i>配置獎項
+        </button>
+      </div>
+    </section>
+
+    <!-- 抽獎區域 -->
+    <section id="lottery" class="mb-20">
+      <div class="card max-w-4xl mx-auto">
+        <h3 class="text-2xl font-bold mb-6 text-center">幸運抽獎區</h3>
+        
+        <!-- 抽獎號碼顯示 -->
+        <div class="flex flex-wrap justify-center gap-4 mb-8">
+          <div class="lottery-ball bg-primary" id="ball1">?</div>
+          <div class="lottery-ball bg-secondary" id="ball2">?</div>
+          <div class="lottery-ball bg-accent text-dark" id="ball3">?</div>
+          <div class="lottery-ball bg-dark" id="ball4">?</div>
+          <div class="lottery-ball bg-primary" id="ball5">?</div>
+          <div class="lottery-ball bg-secondary" id="ball6">?</div>
+          <div class="lottery-ball bg-accent text-dark" id="special-ball">
+            <span class="text-xs">特別號</span>
+          </div>
+        </div>
+        
+        <!-- 控制區 -->
+        <div class="flex flex-col md:flex-row gap-4 justify-center items-center">
+          <div class="w-full md:w-auto">
+            <label class="block text-gray-700 mb-2">添加幸運號碼:</label>
+            <div class="flex gap-2">
+              <input type="text" placeholder="輸入姓名或學號" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 flex-grow">
+              <button class="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-lg transition-colors" id="add-number-btn">
+                <i class="fa fa-plus"></i>
+              </button>
+            </div>
+          </div>
+          
+          <button id="draw-btn" class="btn-primary text-lg">
+            <i class="fa fa-random mr-2"></i>開始抽獎
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 獎項設定 -->
+    <section id="settings" class="mb-20">
+      <div class="card max-w-4xl mx-auto">
+        <h3 class="text-2xl font-bold mb-6 text-center">獎項設定</h3>
+        
+        <div class="space-y-6">
+          <!-- 號碼範圍設定 -->
+          <div class="p-4 bg-gray-50 rounded-xl">
+            <h4 class="font-bold text-lg mb-3">號碼範圍設定</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-gray-700 mb-1">最小號碼:</label>
+                <input type="number" value="1" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50" id="min-number">
+              </div>
+              <div>
+                <label class="block text-gray-700 mb-1">最大號碼:</label>
+                <input type="number" value="30" min="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50" id="max-number">
+              </div>
+            </div>
+          </div>
+          
+          <!-- 獎項設定 -->
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <h4 class="font-bold text-lg">獎項設定</h4>
+              <button class="text-primary hover:text-primary/80 text-sm font-medium" id="add-prize-btn">
+                <i class="fa fa-plus-circle mr-1"></i>新增獎項
+              </button>
+            </div>
+            
+            <div class="space-y-3" id="prizes-container">
+              <div class="p-4 bg-gray-50 rounded-xl flex justify-between items-center">
+                <div>
+                  <span class="font-medium">對中1球</span>
+                  <p class="text-sm text-gray-500">點數+1</p>
+                </div>
+                <button class="text-gray-400 hover:text-primary edit-prize">
+                  <i class="fa fa-pencil"></i>
+                </button>
+              </div>
+              
+              <div class="p-4 bg-gray-50 rounded-xl flex justify-between items-center">
+                <div>
+                  <span class="font-medium">對中2球</span>
+                  <p class="text-sm text-gray-500">糖果一顆</p>
+                </div>
+                <button class="text-gray-400 hover:text-primary edit-prize">
+                  <i class="fa fa-pencil"></i>
+                </button>
+              </div>
+              
+              <div class="p-4 bg-gray-50 rounded-xl flex justify-between items-center">
+                <div>
+                  <span class="font-medium">對中6球</span>
+                  <p class="text-sm text-gray-500">小包科學麵</p>
+                </div>
+                <button class="text-gray-400 hover:text-primary edit-prize">
+                  <i class="fa fa-pencil"></i>
+                </button>
+              </div>
+              
+              <div class="p-4 bg-gray-50 rounded-xl flex justify-between items-center">
+                <div>
+                  <span class="font-medium">特別號</span>
+                  <p class="text-sm text-gray-500">免值日生一次</p>
+                </div>
+                <button class="text-gray-400 hover:text-primary edit-prize">
+                  <i class="fa fa-pencil"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 抽獎記錄 -->
+    <section id="history" class="mb-20">
+      <div class="card max-w-4xl mx-auto">
+        <h3 class="text-2xl font-bold mb-6 text-center">抽獎記錄</h3>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead>
+              <tr class="bg-gray-50">
+                <th class="py-3 px-4 text-left">日期</th>
+                <th class="py-3 px-4 text-left">中獎號碼</th>
+                <th class="py-3 px-4 text-left">中獎者</th>
+                <th class="py-3 px-4 text-left">獎項</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200" id="history-table">
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="py-3 px-4">2023-05-15</td>
+                <td class="py-3 px-4">5, 12, 18, 22, 25, 29 + 7</td>
+                <td class="py-3 px-4">張三</td>
+                <td class="py-3 px-4">對中3球 - 小獎品</td>
+              </tr>
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="py-3 px-4">2023-05-12</td>
+                <td class="py-3 px-4">3, 8, 15, 19, 23, 28 + 12</td>
+                <td class="py-3 px-4">李四</td>
+                <td class="py-3 px-4">特別號 - 免值日生</td>
+              </tr>
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="py-3 px-4">2023-05-10</td>
+                <td class="py-3 px-4">2, 7, 14, 21, 26, 30 + 5</td>
+                <td class="py-3 px-4">王五</td>
+                <td class="py-3 px-4">對中2球 - 糖果一顆</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="mt-4 text-center text-gray-500 text-sm">
+          顯示最近3條記錄 | <a href="#" class="text-primary hover:underline">查看全部</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 使用說明 -->
+    <section id="instructions" class="mb-10">
+      <div class="card max-w-4xl mx-auto">
+        <h3 class="text-2xl font-bold mb-6 text-center">使用說明</h3>
+        
+        <div class="space-y-8">
+          <div>
+            <h4 class="flex items-center text-xl font-bold mb-3 text-primary">
+              <i class="fa fa-lightbulb-o mr-2"></i>課堂搶答王
+            </h4>
+            <p class="text-gray-600 mb-2">學生答對問題時，在系統中為其輸入自選的幸運號碼，累積答對次數越多，中獎機率越高。</p>
+            <div class="bg-gray-50 p-3 rounded-lg text-sm">
+              <strong>示例：</strong>設定"對中1球=點數+1"、"對中2球=糖果一顆"等規則
+            </div>
+          </div>
+          
+          <div>
+            <h4 class="flex items-center text-xl font-bold mb-3 text-primary">
+              <i class="fa fa-pencil mr-2"></i>作業達人秀
+            </h4>
+            <p class="text-gray-600 mb-2">準時完成作業的學生，可獲得一組電腦隨機產生的幸運號碼。</p>
+            <div class="bg-gray-50 p-3 rounded-lg text-sm">
+              <strong>示例：</strong>設定"特別號=免值日生一次"
+            </div>
+          </div>
+          
+          <div>
+            <h4 class="flex items-center text-xl font-bold mb-3 text-primary">
+              <i class="fa fa-users mr-2"></i>分組合作賽
+            </h4>
+            <p class="text-gray-600 mb-2">以小組為單位，達成目標後全組成員皆可獲得投注資格。</p>
+            <div class="bg-gray-50 p-3 rounded-lg text-sm">
+              <strong>示例：</strong>設定大獎"6=小包科學麵"，讓團隊榮譽與個人幸運結合
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 頁腳 -->
+  <footer class="bg-dark text-white py-8">
+    <div class="container mx-auto px-4 text-center">
+      <div class="flex justify-center items-center mb-4">
+        <i class="fa fa-trophy text-primary text-3xl mr-2"></i>
+        <h2 class="text-xl font-bold">優良表現抽獎機</h2>
+      </div>
+      <p class="text-gray-400 mb-6">點燃學習與生活熱情的神奇工具</p>
+      <div class="flex justify-center space-x-4 mb-6">
+        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+          <i class="fa fa-question-circle"></i> 幫助中心
+        </a>
+        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+          <i class="fa fa-envelope"></i> 聯繫我們
+        </a>
+        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+          <i class="fa fa-info-circle"></i> 關於
+        </a>
+      </div>
+      <p class="text-gray-500 text-sm">© 2023 優良表現抽獎機 - 保留所有權利</p>
+    </div>
+  </footer>
+
+  <!-- 抽獎結果彈窗 -->
+  <div id="result-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all animate-bounce-slow">
+      <div class="text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 text-primary mb-4">
+          <i class="fa fa-trophy text-3xl"></i>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">恭喜中獎！</h3>
+        <p class="text-gray-600 mb-6">本次抽獎結果已經產生</p>
+        
+        <div class="flex flex-wrap justify-center gap-2 mb-6" id="result-balls">
+          <!-- 結果號碼將由JS動態生成 -->
+        </div>
+        
+        <div class="bg-gray-50 p-4 rounded-xl mb-6" id="winner-info">
+          <p class="font-medium">中獎者：張三</p>
+          <p class="text-gray-600">獲得獎項：對中3球 - 小獎品</p>
+        </div>
+        
+        <button id="close-modal" class="btn-primary w-full">
+          確認
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // DOM元素引用
+    const drawBtn = document.getElementById('draw-btn');
+    const mainDrawBtn = document.getElementById('main-draw-btn');
+    const resultModal = document.getElementById('result-modal');
+    const closeModal = document.getElementById('close-modal');
+    const resultBallsContainer = document.getElementById('result-balls');
+    const winnerInfo = document.getElementById('winner-info');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const addNumberBtn = document.getElementById('add-number-btn');
+    const addPrizeBtn = document.getElementById('add-prize-btn');
+    const minNumberInput = document.getElementById('min-number');
+    const maxNumberInput = document.getElementById('max-number');
+    
+    // 抽獎球元素
+    const balls = [
+      document.getElementById('ball1'),
+      document.getElementById('ball2'),
+      document.getElementById('ball3'),
+      document.getElementById('ball4'),
+      document.getElementById('ball5'),
+      document.getElementById('ball6'),
+      document.getElementById('special-ball')
+    ];
+    
+    // 產生隨機數
+    function getRandomNumber() {
+      const min = parseInt(minNumberInput.value) || 1;
+      const max = parseInt(maxNumberInput.value) || 30;
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+    
+    // 執行抽獎
+    function startDraw() {
+      // 防止重複點擊
+      drawBtn.disabled = true;
+      mainDrawBtn.disabled = true;
+      drawBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>抽獎中...';
+      mainDrawBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>抽獎中...';
+      
+      let intervalIds = [];
+      const finalNumbers = [];
+      
+      // 每個球單獨滾動
+      balls.forEach((ball, index) => {
+        let intervalId = setInterval(() => {
+          const num = getRandomNumber();
+          ball.textContent = num;
+          if (index === 6) {
+            ball.innerHTML = `${num}<span class="text-xs">特別號</span>`;
+          }
+        }, 100);
+        
+        intervalIds.push(intervalId);
+      });
+      
+      // 逐漸停止滾動並記錄最終號碼
+      setTimeout(() => {
+        clearInterval(intervalIds[0]);
+        finalNumbers.push(parseInt(balls[0].textContent));
+        
+        setTimeout(() => {
+          clearInterval(intervalIds[1]);
+          finalNumbers.push(parseInt(balls[1].textContent));
+          
+          setTimeout(() => {
+            clearInterval(intervalIds[2]);
+            finalNumbers.push(parseInt(balls[2].textContent));
+            
+            setTimeout(() => {
+              clearInterval(intervalIds[3]);
+              finalNumbers.push(parseInt(balls[3].textContent));
+              
+              setTimeout(() => {
+                clearInterval(intervalIds[4]);
+                finalNumbers.push(parseInt(balls[4].textContent));
+                
+                setTimeout(() => {
+                  clearInterval(intervalIds[5]);
+                  finalNumbers.push(parseInt(balls[5].textContent));
+                  
+                  setTimeout(() => {
+                    clearInterval(intervalIds[6]);
+                    const specialNum = parseInt(balls[6].textContent.replace(/[^\d]/g, ''));
+                    finalNumbers.push(specialNum);
+                    
+                    // 顯示結果彈窗
+                    setTimeout(() => {
+                      showResult(finalNumbers);
+                      drawBtn.disabled = false;
+                      mainDrawBtn.disabled = false;
+                      drawBtn.innerHTML = '<i class="fa fa-random mr-2"></i>開始抽獎';
+                      mainDrawBtn.innerHTML = '<i class="fa fa-play-circle mr-2"></i>開始抽獎';
+                    }, 500);
+                  }, 300);
+                }, 300);
+              }, 300);
+            }, 300);
+          }, 300);
+        }, 300);
+      }, 2000);
+    }
+    
+    // 顯示抽獎結果
+    function showResult(numbers) {
+      // 清空之前的結果
+      resultBallsContainer.innerHTML = '';
+      
+      // 建立結果號碼球
+      numbers.forEach((num, index) => {
+        const ball = document.createElement('div');
+        let bgColor = '';
+        
+        // 設置顏色
+        if (index < 6) {
+          bgColor = index % 3 === 0 ? 'bg-primary' : 
+                    index % 3 === 1 ? 'bg-secondary' : 'bg-accent text-dark';
+        } else {
+          bgColor = 'bg-accent text-dark';
+        }
+        
+        ball.className = `lottery-ball ${bgColor} text-sm w-12 h-12`;
+        ball.textContent = num;
+        
+        // 特別號顯示標註
+        if (index === 6) {
+          ball.innerHTML = `${num}<span class="text-xs">特別號</span>`;
+        }
+        
+        resultBallsContainer.appendChild(ball);
+      });
+      
+      // 隨機選取一個中獎者（實際應根據參與者列表）
+      const winners = ['張三', '李四', '王五', '趙六', '陳七', '楊八'];
+      const randomWinner = winners[Math.floor(Math.random() * winners.length)];
+      
+      // 更新中獎者信息
+      winnerInfo.innerHTML = `
+        <p class="font-medium">中獎者：${randomWinner}</p>
+        <p class="text-gray-600">獲得獎項：對中${Math.floor(Math.random() * 6) + 1}球 - 小獎品</p>
+      `;
+      
+      // 顯示彈窗
+      resultModal.classList.remove('hidden');
+      
+      // 新增到抽獎記錄
+      addToHistory(numbers, randomWinner);
+    }
+    
+    // 添加到抽獎記錄
+    function addToHistory(numbers, winner) {
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+      
+      // 格式化號碼顯示
+      const mainNumbers = numbers.slice(0, 6).join(', ');
+      const specialNumber = numbers[6];
+      const numbersStr = `${mainNumbers} + ${specialNumber}`;
+      
+      // 隨機獎項
+      const prizeCount = Math.floor(Math.random() * 6) + 1;
+      const prizeStr = `對中${prizeCount}球 - 小獎品`;
+      
+      // 建立新記錄行
+      const table = document.getElementById('history-table');
+      const newRow = document.createElement('tr');
+      newRow.className = 'hover:bg-gray-50 transition-colors';
+      newRow.innerHTML = `
+        <td class="py-3 px-4">${dateStr}</td>
+        <td class="py-3 px-4">${numbersStr}</td>
+        <td class="py-3 px-4">${winner}</td>
+        <td class="py-3 px-4">${prizeStr}</td>
+      `;
+      
+      // 插入到表格開頭
+      table.insertBefore(newRow, table.firstChild);
+      
+      // 保持只顯示3條記錄
+      if (table.rows.length > 3) {
+        table.deleteRow(3);
+      }
+    }
+    
+    // 事件監聽器
+    drawBtn.addEventListener('click', startDraw);
+    mainDrawBtn.addEventListener('click', () => {
+      // 滾動到抽獎區再執行抽獎
+      document.getElementById('lottery').scrollIntoView({ behavior: 'smooth' });
+      setTimeout(startDraw, 800);
+    });
+    
+    closeModal.addEventListener('click', () => {
+      resultModal.classList.add('hidden');
+    });
+    
+    // 手機選單切換
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+    
+    // 添加幸運號碼按鈕
+    addNumberBtn.addEventListener('click', () => {
+      const input = addNumberBtn.previousElementSibling;
+      if (input.value.trim()) {
+        alert(`已添加幸運號碼：${input.value.trim()}`);
+        input.value = '';
+      } else {
+        alert('請輸入姓名或學號');
+      }
+    });
+    
+    // 添加獎項按鈕
+    addPrizeBtn.addEventListener('click', () => {
+      const condition = prompt('請輸入中獎條件（例如：對中3球）：');
+      if (condition) {
+        const prize = prompt('請輸入對應獎項（例如：文具一套）：');
+        if (prize) {
+          const container = document.getElementById('prizes-container');
+          const newPrize = document.createElement('div');
+          newPrize.className = 'p-4 bg-gray-50 rounded-xl flex justify-between items-center';
+          newPrize.innerHTML = `
+            <div>
+              <span class="font-medium">${condition}</span>
+              <p class="text-sm text-gray-500">${prize}</p>
+            </div>
+            <button class="text-gray-400 hover:text-primary edit-prize">
+              <i class="fa fa-pencil"></i>
+            </button>
+          `;
+          container.appendChild(newPrize);
+          
+          // 為新按鈕添加事件
+          newPrize.querySelector('.edit-prize').addEventListener('click', function() {
+            editPrize(this);
+          });
+        }
+      }
+    });
+    
+    // 編輯獎項
+    document.querySelectorAll('.edit-prize').forEach(btn => {
+      btn.addEventListener('click', function() {
+        editPrize(this);
+      });
+    });
+    
+    function editPrize(btn) {
+      const parent = btn.closest('div');
+      const conditionEl = parent.querySelector('.font-medium');
+      const prizeEl = parent.querySelector('.text-sm');
+      
+      const newCondition = prompt('修改中獎條件：', conditionEl.textContent);
+      if (newCondition) {
+        const newPrize = prompt('修改獎項：', prizeEl.textContent);
+        if (newPrize) {
+          conditionEl.textContent = newCondition;
+          prizeEl.textContent = newPrize;
+        }
+      }
+    }
+    
+    // 導航列滾動效果
+    window.addEventListener('scroll', () => {
+      const nav = document.querySelector('nav');
+      if (window.scrollY > 50) {
+        nav.classList.add('py-2', 'shadow-lg');
+        nav.classList.remove('py-3', 'shadow-md');
+      } else {
+        nav.classList.add('py-3', 'shadow-md');
+        nav.classList.remove('py-2', 'shadow-lg');
+      }
+    });
+    
+    // 平滑滾動
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        
+        if (targetElement) {
+          // 關閉手機選單（如果打開）
+          mobileMenu.classList.add('hidden');
+          
+          window.scrollTo({
+            top: targetElement.offsetTop - 80,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
